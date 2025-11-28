@@ -10,4 +10,10 @@ class InviteService {
     final code = await api.generateInviteCode();
     return InviteModel(code: code);
   }
+
+  Future<String> confirm(String code) async {
+    await api.confirmCode(code);
+
+    return "vinculated";
+  }
 }

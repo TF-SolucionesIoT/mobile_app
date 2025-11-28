@@ -17,6 +17,17 @@ class InviteApi {
       throw Exception("Error ${response.statusCode}: ${response.data}");
     }
   }
+
+  Future<String> confirmCode(String code) async {
+    final response = await dio.post('/invite/use/$code');
+
+    if (response.statusCode == 200) {
+      return "vinculated";
+    } else {
+      throw Exception("Error ${response.statusCode}: ${response.data}");
+    }
+  }
+
 }
 
 // Provider de InviteApi

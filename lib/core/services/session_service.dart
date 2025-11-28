@@ -1,4 +1,5 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:jwt_decode/jwt_decode.dart';
 
 class SessionService {
   static const _storage = FlutterSecureStorage();
@@ -17,8 +18,23 @@ class SessionService {
   }
 
   Future<bool> isLogged() async {
-  final t = await getAccessToken();
-  return t != null;
+    final t = await getAccessToken();
+    return t != null;
   }
 
+  Map<String, dynamic> decodeJwt(String token) {
+    return Jwt.parseJwt(token);
+  }
+
+  Future<String?> getUserType() async {
+    final token = await getAccessToken();
+    if (token == null) return null;
+
+    try {
+      final payload = Jwt.parseJwt(token);
+      return payload['typeOfUser']; // o 'role', depende de tu JWT
+    } catch (e) {
+      return null;
+    }
+  }
 }
