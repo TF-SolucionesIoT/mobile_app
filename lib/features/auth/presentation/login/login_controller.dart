@@ -1,19 +1,16 @@
 import 'package:app_alerta_vital/core/services/session_provider.dart';
+import 'package:app_alerta_vital/core/services/type_of_user_provider.dart';
 import 'package:app_alerta_vital/features/auth/auth.dart';
 import 'package:app_alerta_vital/features/auth/presentation/login/login_state.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 class LoginController extends Notifier<LoginState> {
-  
   @override
   LoginState build() {
-
     return LoginState.initial();
   }
 
   Future<void> login(String username, String password) async {
-
     final session = ref.read(sessionServiceProvider);
     final loginUser = ref.read(loginUserProvider);
 
@@ -30,7 +27,12 @@ class LoginController extends Notifier<LoginState> {
 
   Future<void> logout() async {
     final session = ref.read(sessionServiceProvider);
+
     await session.logout();
+
+    ref.invalidate(userTypeProvider);
+    ref.invalidate(sessionServiceProvider);
+
     state = LoginState.initial();
   }
 }

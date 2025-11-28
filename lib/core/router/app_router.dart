@@ -1,4 +1,5 @@
 import 'package:app_alerta_vital/features/auth/presentation/register/register_page.dart';
+import 'package:app_alerta_vital/features/invitecode/presentation/confirmcode/confirm_code_page.dart';
 import 'package:app_alerta_vital/features/invitecode/presentation/generatecode/invite_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -16,15 +17,42 @@ final routerProvider = Provider<GoRouter>((ref) {
       final session = container.read(sessionServiceProvider);
 
       final logged = await session.isLogged();
+      final userType = await session.getUserType();
+
       final isLogin = state.matchedLocation == '/login';
       final isRegister = state.matchedLocation == '/register';
+
 
       if (!logged && !(isLogin || isRegister)) {
         return '/login';
       }
 
       if (logged && (isLogin || isRegister)) {
-        return '/home';
+        if (userType == "PATIENT") {
+          return '/patient-home';
+        }
+        if (userType == "CAREGIVER") {
+          return '/caregiver-home';
+        }
+      }
+
+      if (userType == "PATIENT" && state.matchedLocation == '/home') {
+        return '/patient-home';
+      
+      }
+
+      if (userType == "CAREGIVER" && state.matchedLocation == '/home') {
+        return '/caregiver-home';
+      
+      }
+
+      if (userType == "PATIENT" && state.matchedLocation == '/caregiver-home') {
+        return '/patient-home';
+      }
+
+      // Therapist no puede acceder a rutas de Legal
+      if (userType == "CAREGIVER" && state.matchedLocation == '/patient-home') {
+        return '/caregiver-home';
       }
 
       return null;
@@ -50,85 +78,109 @@ final routerProvider = Provider<GoRouter>((ref) {
               backgroundColor: Colors.white,
               foregroundColor: Colors.black,
               elevation: 0,
-              leading: Builder(
-                builder: (context) {
-                  return IconButton(
-                    icon: const Icon(Icons.menu),
-                    onPressed: () {
-                      Scaffold.of(context).openDrawer();
-                    },
-                  );
-                },
-              ),
-            ),
-
-            // -------- DRAWER GLOBAL --------
-            drawer: Drawer(
-              child: ListView(
-                padding: EdgeInsets.zero,
-                children: [
-                  const DrawerHeader(
-                    decoration: BoxDecoration(color: Colors.blue),
-                    child: Text(
-                      "☰ Menú",
-                      style: TextStyle(color: Colors.white, fontSize: 24),
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.home),
-                    title: const Text("Inicio"),
-                    onTap: () => context.go('/home'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.person),
-                    title: const Text("Perfil"),
-                    onTap: () => context.go('/profile'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.sensors),
-                    title: const Text("Sensores"),
-                    onTap: () => context.go('/sensors'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.history),
-                    title: const Text("Historial"),
-                    onTap: () => context.go('/history'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.settings),
-                    title: const Text("Configuración"),
-                    onTap: () => context.go('/settings'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.key),
-                    title: const Text("Generar Código"),
-                    onTap: () => context.go('/invite'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.logout),
-                    title: const Text("Cerrar sesión"),
-                    onTap: () async {
-                      final session = ref.read(sessionServiceProvider);
-                      await session.logout();
-
-                      if (!context.mounted) return;
-                      context.go('/login');
-                    },
-                  ),
-                ],
-              ),
             ),
 
             body: child,
+
+            // ---------- NUEVO NAVIGATION BAR ----------
+            bottomNavigationBar: FutureBuilder(
+              future: ref.read(sessionServiceProvider).getUserType(),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData) {
+                  return const SizedBox(height: 65);
+                }
+
+                final role = snapshot.data;
+                final items = <_NavItem>[
+                  
+                  _NavItem(
+                    label: "Perfil",
+                    icon: Icons.person,
+                    location: "/profile",
+                  ),
+                ];
+
+                // ---- ITEMS OPCIONALES POR ROL ----
+                if (role == "PATIENT") {
+                  items.add(
+                    _NavItem(
+                      label: "Generar Código",
+                      icon: Icons.qr_code,
+                      location: "/invite",
+                    ),
+                  );
+                }
+
+                if (role == "CAREGIVER") {
+                  items.add(
+                    _NavItem(
+                      label: "Usar Código",
+                      icon: Icons.family_restroom,
+                      location: "/confirm-code",
+                    ),
+                  );
+                }
+
+                // ---- LOGOUT SIEMPRE AL FINAL ----
+                items.add(
+                  _NavItem(
+                    label: "Salir",
+                    icon: Icons.logout,
+                    location: "/logout",
+                  ),
+                );
+
+                final currentIndex = items.indexWhere(
+                  (i) => i.location == state.matchedLocation,
+                );
+
+                return NavigationBar(
+                  height: 65,
+                  selectedIndex: currentIndex >= 0 ? currentIndex : 0,
+                  backgroundColor: Colors.white,
+                  indicatorColor: Colors.blue.shade100,
+                  elevation: 12,
+                  labelBehavior:
+                      NavigationDestinationLabelBehavior.onlyShowSelected,
+
+                  onDestinationSelected: (index) async {
+                    final item = items[index];
+
+                    if (item.location == "/logout") {
+                      final s = ref.read(sessionServiceProvider);
+                      await s.logout();
+                      if (!context.mounted) return;
+                      context.go('/login');
+                      return;
+                    }
+
+                    context.go(item.location);
+                  },
+
+                  destinations: [
+                    for (final item in items)
+                      NavigationDestination(
+                        icon: Icon(item.icon),
+                        label: item.label,
+                      ),
+                  ],
+                );
+              },
+            ),
           );
         },
 
         // ---------- RUTAS HIJAS DE SHELLROUTE ----------
         routes: [
           GoRoute(
-            path: '/home',
-            name: 'home',
+            path: '/patient-home',
+            name: 'Patient Home',
             builder: (_, __) => const HomePage(),
+          ),
+          GoRoute(
+            path: '/caregiver-home',
+            name: 'Caregiver Home',
+            builder: (_, __) => const PlaceholderWidget("CAREGIVER HOME"),
           ),
           GoRoute(
             path: '/invite',
@@ -136,15 +188,19 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const InvitePage(),
           ),
           GoRoute(
-            path: '/profile',
-            name: 'profile',
-            builder: (_, __) => const PlaceholderWidget("Perfil"),
+            path: '/confirm-code',
+            name: 'Confirm Code',
+            builder: (_, __) => ConfirmCodePage(),
           ),
           GoRoute(
             path: '/sensors',
             name: 'sensors',
             builder: (_, __) => const PlaceholderWidget("Sensores"),
           ),
+          GoRoute(
+            path: '/profile', 
+            name: 'profile',
+             builder: (_, __) => const PlaceholderWidget("Perfil")),
         ],
       ),
     ],
@@ -154,7 +210,9 @@ final routerProvider = Provider<GoRouter>((ref) {
 // -------- TITULOS DE CADA RUTA --------
 String _getTitleFor(String location) {
   switch (location) {
-    case '/home':
+    case '/patient-home':
+      return 'Inicio';
+    case '/caregiver-home':
       return 'Inicio';
     case '/invite':
       return 'Generar Código';
@@ -162,6 +220,8 @@ String _getTitleFor(String location) {
       return 'Perfil';
     case '/sensors':
       return 'Sensores';
+    case '/confirm-code':
+      return 'Confirmar Código';
 
     default:
       return '';
@@ -177,4 +237,12 @@ class PlaceholderWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(child: Text(text, style: const TextStyle(fontSize: 22)));
   }
+}
+
+class _NavItem {
+  final String label;
+  final IconData icon;
+  final String location;
+
+  _NavItem({required this.label, required this.icon, required this.location});
 }
