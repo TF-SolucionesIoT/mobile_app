@@ -1,4 +1,7 @@
+import 'package:app_alerta_vital/core/services/type_of_user_provider.dart';
 import 'package:app_alerta_vital/features/auth/presentation/register/register_page.dart';
+import 'package:app_alerta_vital/features/home/presentation/caregiver_home_page.dart';
+import 'package:app_alerta_vital/features/home/presentation/home_controller.dart';
 import 'package:app_alerta_vital/features/invitecode/presentation/confirmcode/confirm_code_page.dart';
 import 'package:app_alerta_vital/features/invitecode/presentation/generatecode/invite_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,15 +16,13 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/login',
 
     redirect: (context, state) async {
-      final container = ProviderScope.containerOf(context);
-      final session = container.read(sessionServiceProvider);
+      final session = ref.read(sessionServiceProvider);
 
       final logged = await session.isLogged();
       final userType = await session.getUserType();
 
       final isLogin = state.matchedLocation == '/login';
       final isRegister = state.matchedLocation == '/register';
-
 
       if (!logged && !(isLogin || isRegister)) {
         return '/login';
@@ -38,12 +39,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       if (userType == "PATIENT" && state.matchedLocation == '/home') {
         return '/patient-home';
-      
       }
 
       if (userType == "CAREGIVER" && state.matchedLocation == '/home') {
         return '/caregiver-home';
-      
       }
 
       if (userType == "PATIENT" && state.matchedLocation == '/caregiver-home') {
@@ -91,14 +90,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                 }
 
                 final role = snapshot.data;
-                final items = <_NavItem>[
-                  
-                  _NavItem(
-                    label: "Perfil",
-                    icon: Icons.person,
-                    location: "/profile",
-                  ),
-                ];
+                final items = <_NavItem>[];
 
                 // ---- ITEMS OPCIONALES POR ROL ----
                 if (role == "PATIENT") {
@@ -107,6 +99,26 @@ final routerProvider = Provider<GoRouter>((ref) {
                       label: "Generar Código",
                       icon: Icons.qr_code,
                       location: "/invite",
+                    ),
+                  );
+                }
+
+                if (role == "PATIENT") {
+                  items.add(
+                    _NavItem(
+                      label: "Signos vitales",
+                      icon: Icons.qr_code,
+                      location: "/patient-home",
+                    ),
+                  );
+                }
+
+                if (role == "CAREGIVER") {
+                  items.add(
+                    _NavItem(
+                      label: "Signos Vitales",
+                      icon: Icons.co_present,
+                      location: "/caregiver-home",
                     ),
                   );
                 }
@@ -120,7 +132,13 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ),
                   );
                 }
-
+                items.add(
+                  _NavItem(
+                    label: "Perfil",
+                    icon: Icons.person,
+                    location: "/profile",
+                  ),
+                );
                 // ---- LOGOUT SIEMPRE AL FINAL ----
                 items.add(
                   _NavItem(
@@ -147,8 +165,19 @@ final routerProvider = Provider<GoRouter>((ref) {
                     final item = items[index];
 
                     if (item.location == "/logout") {
+                      try {
+                        ref.read(homeControllerProvider.notifier).resetState();
+                      } catch (e) {
+                        // Si falla, no pasa nada
+                      }
+
+                      
                       final s = ref.read(sessionServiceProvider);
                       await s.logout();
+
+                      ref.invalidate(homeControllerProvider);
+                      ref.invalidate(userTypeProvider);
+
                       if (!context.mounted) return;
                       context.go('/login');
                       return;
@@ -180,7 +209,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/caregiver-home',
             name: 'Caregiver Home',
-            builder: (_, __) => const PlaceholderWidget("CAREGIVER HOME"),
+            builder: (_, __) => const CaregiverHomePage(),
           ),
           GoRoute(
             path: '/invite',
@@ -198,9 +227,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             builder: (_, __) => const PlaceholderWidget("Sensores"),
           ),
           GoRoute(
-            path: '/profile', 
+            path: '/profile',
             name: 'profile',
-             builder: (_, __) => const PlaceholderWidget("Perfil")),
+            builder: (_, __) => const PlaceholderWidget("Perfil"),
+          ),
         ],
       ),
     ],

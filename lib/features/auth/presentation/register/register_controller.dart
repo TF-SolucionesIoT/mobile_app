@@ -24,7 +24,7 @@ class RegisterController extends Notifier<RegisterState>
 
     try {
       final tokens = await registerUser(firstName, lastName, email, gender, username, password, "2000-01-01");
-      await session.saveTokens(tokens.accessToken, tokens.refreshToken);
+      await session.saveTokens(tokens.accessToken, tokens.refreshToken, tokens.userId, tokens.typeOfUser);
 
       state = state.copyWith(loading: false, tokens: tokens);
     } catch (e) {
