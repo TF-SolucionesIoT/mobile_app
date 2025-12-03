@@ -165,13 +165,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                     final item = items[index];
 
                     if (item.location == "/logout") {
-                      try {
-                        ref.read(homeControllerProvider.notifier).resetState();
-                      } catch (e) {
-                        // Si falla, no pasa nada
-                      }
 
-                      
                       final s = ref.read(sessionServiceProvider);
                       await s.logout();
 

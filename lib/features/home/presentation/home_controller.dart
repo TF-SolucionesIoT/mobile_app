@@ -19,17 +19,14 @@ class HomeController extends Notifier<HomeState> {
     return HomeState.initial();
   }
 
-  void resetState() {
-    print("🔄 resetState() llamado - patients antes: ${state.patients.length}");
-    state = HomeState.initial();
-    _ws?.disconnect();
-    print("✅ resetState() completado - patients después: ${state.patients.length}");
-  }
-
   Future<void> initMonitoring(String typeOfUser, String loggedUserId) async {
     print("🚀 initMonitoring iniciado - tipo: $typeOfUser, userId: $loggedUserId");
     print("📊 Estado actual patients: ${state.patients.length}");
     
+    print("🔄 Reseteando estado...");
+    state = HomeState.initial();
+    _ws?.disconnect();
+
     final session = ref.read(sessionServiceProvider);
     final token = await session.getAccessToken();
 
@@ -38,7 +35,6 @@ class HomeController extends Notifier<HomeState> {
       return;
     }
 
-    _ws?.disconnect();
     _ws = WebSocketService();
 
     _ws!.connect(

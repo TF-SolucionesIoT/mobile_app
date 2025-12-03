@@ -35,12 +35,6 @@ class _HomePageState extends ConsumerState<HomePage> {
         print("🔄 Inicializando monitoreo para usuario: $userIdStr");
         
         // Resetear el estado
-        _controller.resetState();
-        
-        // Esperar un frame para que el reset se aplique
-        await Future.delayed(Duration.zero);
-        
-        // Iniciar monitoreo
         _controller.initMonitoring(type, userIdStr);
         
         if (mounted) { // 👈 Verificar que el widget sigue montado

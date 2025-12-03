@@ -18,7 +18,6 @@ class _CaregiverHomePageState extends ConsumerState<CaregiverHomePage> {
   void initState() {
     super.initState();
     controller = ref.read(homeControllerProvider.notifier);
-    controller.resetState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final session = ref.read(sessionServiceProvider);
