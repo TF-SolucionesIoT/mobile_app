@@ -109,7 +109,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   items.add(
                     _NavItem(
                       label: "Signos vitales",
-                      icon: Icons.qr_code,
+                      icon: Icons.monitor_heart,
                       location: "/patient-home",
                     ),
                   );
@@ -129,7 +129,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   items.add(
                     _NavItem(
                       label: "Signos Vitales",
-                      icon: Icons.co_present,
+                      icon: Icons.diversity_1,
                       location: "/caregiver-home",
                     ),
                   );

@@ -6,109 +6,181 @@ import 'package:share_plus/share_plus.dart';
 class InvitePage extends ConsumerWidget {
   const InvitePage({super.key});
 
+  // Colores del tema
+  final Color primaryColor = const Color(0xFF5A9DE0);
+  final Color secondaryColor = const Color(0xFF7B68EE);
+  final Color accentColor = const Color(0xFF00D4AA);
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(inviteControllerProvider);
 
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                "Generate Invite Code",
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.blue[600],
-                ),
-              ),
-              const SizedBox(height: 30),
-
-              state.code != null
-                  ? Text(
-                      "Your Code:",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : Container(),
-
-              const SizedBox(height: 10),
-
-              if (state.code != null)
-                SelectableText(
-                  state.code!,
-                  style: TextStyle(
-                    fontSize: 28,
-                    color: Colors.blue[700],
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-
-              const SizedBox(height: 40),
-
-              state.loading
-                  ? CircularProgressIndicator()
-                  : OutlinedButton.icon(
-                      onPressed: () {
-                        ref.read(inviteControllerProvider.notifier).generate();
-                      },
-                      icon: Icon(Icons.refresh, color: Colors.blue[600]),
-                      label: Text(
-                        "Generate Code",
-                        style: TextStyle(
-                          color: Colors.blue[600],
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: BorderSide(color: Colors.blue.shade600, width: 2),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 10,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                  ),
-              if (state.code != null) ...[
-                const SizedBox(height: 20),
-                OutlinedButton.icon(
-                  onPressed: () {
-                    Share.share('My invite code is: ${state.code!}');
-                  },
-                  icon: Icon(Icons.share, color: Colors.blue[600]),
-                  label: Text(
-                    "Share",
-                    style: TextStyle(
-                      color: Colors.blue[600],
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: Colors.blue.shade600, width: 2),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 18,
-                      vertical: 10,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-              ],
-
-              if (state.error != null) ...[
-                const SizedBox(height: 20),
-                Text(state.error!, style: const TextStyle(color: Colors.red)),
-              ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              primaryColor.withOpacity(0.08),
+              Colors.white,
             ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Header
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+                      borderRadius: BorderRadius.circular(14),
+                      boxShadow: [
+                        BoxShadow(
+                          color: primaryColor.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: const [
+                        Icon(Icons.vpn_key_rounded, color: Colors.white, size: 28),
+                        SizedBox(width: 10),
+                        Text(
+                          "Generate Invite Code",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 40),
+
+                  // Código generado
+                  if (state.code != null)
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: primaryColor.withOpacity(0.1),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          const Text(
+                            "Your Code",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          SelectableText(
+                            state.code!,
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: primaryColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  if (state.code != null) const SizedBox(height: 30),
+
+                  // Botones
+                  state.loading
+                      ? CircularProgressIndicator(color: primaryColor)
+                      : Column(
+                          children: [
+                            _gradientButton(
+                              text: "Generate Code",
+                              icon: Icons.refresh,
+                              onTap: () => ref.read(inviteControllerProvider.notifier).generate(),
+                              gradientColors: [primaryColor, secondaryColor],
+                            ),
+                            if (state.code != null) const SizedBox(height: 16),
+                            if (state.code != null)
+                              _gradientButton(
+                                text: "Share",
+                                icon: Icons.share,
+                                onTap: () => Share.share('My invite code is: ${state.code!}'),
+                                gradientColors: [accentColor, secondaryColor],
+                              ),
+                          ],
+                        ),
+
+                  if (state.error != null) ...[
+                    const SizedBox(height: 20),
+                    Text(
+                      state.error!,
+                      style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _gradientButton({
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+    required List<Color> gradientColors,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(colors: gradientColors),
+        borderRadius: BorderRadius.circular(14),
+        boxShadow: [
+          BoxShadow(
+            color: gradientColors.first.withOpacity(0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(14),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  text,
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+              ],
+            ),
           ),
         ),
       ),
