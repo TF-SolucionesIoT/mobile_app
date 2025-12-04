@@ -13,12 +13,17 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   String? _currentUserId;
   bool _isInitialized = false;
-  late final HomeController _controller; 
+  late final HomeController _controller;
+
+  // Colores del tema (igual al primer código)
+  final Color primaryColor = const Color(0xFF5A9DE0);
+  final Color secondaryColor = const Color(0xFF7B68EE);
+  final Color accentColor = const Color(0xFF00D4AA);
 
   @override
   void initState() {
     super.initState();
-    _controller = ref.read(homeControllerProvider.notifier); 
+    _controller = ref.read(homeControllerProvider.notifier);
     _initializeMonitoring();
   }
 
@@ -29,14 +34,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (type != null && userId != null) {
       final userIdStr = userId.toString();
-      
-      // Solo inicializar si es un usuario diferente o primera vez
       if (_currentUserId != userIdStr || !_isInitialized) {
-        print("🔄 Inicializando monitoreo para usuario: $userIdStr");
-        
-        // Resetear el estado
         _controller.initMonitoring(type, userIdStr);
-        
         if (mounted) {
           setState(() {
             _currentUserId = userIdStr;
@@ -49,7 +48,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   void dispose() {
-    _controller.disposeSocket(); 
+    _controller.disposeSocket();
     super.dispose();
   }
 
@@ -58,183 +57,227 @@ class _HomePageState extends ConsumerState<HomePage> {
     final state = ref.watch(homeControllerProvider);
 
     if (state.patients.isEmpty) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     final p = state.patients.first;
 
-    Color bpmColor = (p.bpm < 50 || p.bpm > 120) ? Colors.red : Colors.green;
-    Color spo2Color = (p.spo2 < 92) ? Colors.red : Colors.green;
-    Color bpDiastolicColor = (p.bpDiastolic > 90) ? const Color.fromARGB(255, 237, 151, 53) : const Color.fromARGB(255, 61, 137, 164);
     bool riesgo = (p.bpm < 50 || p.bpm > 120 || p.spo2 < 92 || p.bpSystolic > 130 || p.bpDiastolic > 90);
 
+    Color bpmColor = (p.bpm < 50 || p.bpm > 120) ? const Color(0xFFFF5252) : accentColor;
+    Color spo2Color = (p.spo2 < 92) ? const Color(0xFFFF5252) : accentColor;
+    Color bpColor = (p.bpSystolic > 130 || p.bpDiastolic > 90) ? const Color(0xFFFF9800) : primaryColor;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Paciente monitoreado"),
-        centerTitle: true,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              primaryColor.withOpacity(0.08),
+              Colors.white,
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [primaryColor, secondaryColor]),
+                    borderRadius: BorderRadius.circular(14),
+                    boxShadow: [
+                      BoxShadow(
+                        color: primaryColor.withOpacity(0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.monitor_heart_rounded, color: Colors.white, size: 32),
+                      const SizedBox(width: 12),
+                      Text(
+                        "Paciente ${p.patientId}",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 25),
+
+                // Tarjeta principal
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      // Métricas
+                      _metricTile(
+                        icon: Icons.favorite_rounded,
+                        label: "Frecuencia Cardiaca",
+                        value: "${p.bpm}",
+                        unit: "BPM",
+                        color: bpmColor,
+                        isAlert: (p.bpm < 50 || p.bpm > 120),
+                      ),
+                      const SizedBox(height: 16),
+                      _metricTile(
+                        icon: Icons.air_rounded,
+                        label: "Oxigenación (SpO₂)",
+                        value: "${p.spo2}",
+                        unit: "%",
+                        color: spo2Color,
+                        isAlert: p.spo2 < 92,
+                      ),
+                      const SizedBox(height: 16),
+                      _metricTile(
+                        icon: Icons.monitor_heart_outlined,
+                        label: "Presión Arterial",
+                        value: "${p.bpSystolic}/${p.bpDiastolic}",
+                        unit: "mmHg",
+                        color: bpColor,
+                        isAlert: (p.bpSystolic > 130 || p.bpDiastolic > 90),
+                      ),
+                      const SizedBox(height: 25),
+
+                      // Estado de riesgo
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: riesgo
+                              ? const Color(0xFFFFF3F3)
+                              : const Color(0xFFF0FFF8),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: riesgo ? const Color(0xFFFF5252) : accentColor,
+                            width: 2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              riesgo ? Icons.warning_rounded : Icons.check_circle_rounded,
+                              color: riesgo ? const Color(0xFFFF5252) : accentColor,
+                              size: 26,
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              riesgo ? "Riesgo Detectado" : "Paciente Estable",
+                              style: TextStyle(
+                                color: riesgo ? const Color(0xFFFF5252) : accentColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 18,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Nota de tiempo real
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.wifi, color: Colors.blue),
+                          const SizedBox(width: 6),
+                          const Text("Datos en tiempo real"),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            CircleAvatar(
-              radius: 55,
-              backgroundColor: Colors.blue.shade100,
-              child: const Icon(Icons.person, size: 60),
+    );
+  }
+
+  Widget _metricTile({
+    required IconData icon,
+    required String label,
+    required String value,
+    required String unit,
+    required Color color,
+    required bool isAlert,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: color.withOpacity(0.15),
+              borderRadius: BorderRadius.circular(10),
             ),
-
-            const SizedBox(height: 15),
-
-            Text(
-              "Paciente ${p.patientId}",
-              style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 25),
-
-            Card(
-              elevation: 6,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(fontSize: 13, color: Colors.grey[700], fontWeight: FontWeight.w500),
+                ),
+                const SizedBox(height: 2),
+                Row(
                   children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.favorite, size: 32),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Frecuencia Cardiaca",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              "${p.bpm} BPM",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: bpmColor,
-                              ),
-                            ),
-                            
-                          ],
-                        ),
-                      ],
+                    Text(
+                      value,
+                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color),
                     ),
-
-                    const SizedBox(height: 25),
-
-                    Row(
-                      children: [
-                        const Icon(Icons.bloodtype, size: 32),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Oxigenación (SpO₂)",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              "${p.spo2}%",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: spo2Color,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 25),
-                    Row(
-                      children: [
-                        const Icon(Icons.monitor_heart, size: 32),
-                        const SizedBox(width: 10),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Presión Arterial",
-                              style: TextStyle(
-                                fontSize: 16,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                            Text(
-                              "${p.bpSystolic}/${p.bpDiastolic} mmHg",
-                              style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                color: bpDiastolicColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ]
+                    const SizedBox(width: 4),
+                    Text(
+                      unit,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600], fontWeight: FontWeight.w500),
                     ),
                   ],
                 ),
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: riesgo
-                    ? Colors.red.withOpacity(0.15)
-                    : Colors.green.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: riesgo ? Colors.red : Colors.green),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    riesgo ? Icons.warning : Icons.check_circle,
-                    color: riesgo ? Colors.red : Colors.green,
-                    size: 30,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    riesgo ? "Riesgo Detectado" : "Paciente Estable",
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: riesgo ? Colors.red : Colors.green,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Icon(Icons.wifi, color: Colors.blue),
-                SizedBox(width: 6),
-                Text("Datos en tiempo real"),
               ],
             ),
-          ],
-        ),
+          ),
+          if (isAlert)
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+              child: const Icon(Icons.warning_rounded, color: Colors.white, size: 18),
+            ),
+        ],
       ),
     );
   }
