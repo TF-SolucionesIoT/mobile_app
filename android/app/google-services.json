@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1089621478914",
+    "project_id": "alertavital-a6756",
+    "storage_bucket": "alertavital-a6756.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1089621478914:android:5d64382ad2f9047c46e11b",
+        "android_client_info": {
+          "package_name": "com.soulware.app_alerta_vital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB0K3sLc9ZaE6ber2kfRy_xE5TExODb_zE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

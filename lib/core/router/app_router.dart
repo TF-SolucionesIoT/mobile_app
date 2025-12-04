@@ -4,6 +4,8 @@ import 'package:app_alerta_vital/features/home/presentation/caregiver_home_page.
 import 'package:app_alerta_vital/features/home/presentation/home_controller.dart';
 import 'package:app_alerta_vital/features/invitecode/presentation/confirmcode/confirm_code_page.dart';
 import 'package:app_alerta_vital/features/invitecode/presentation/generatecode/invite_page.dart';
+import 'package:app_alerta_vital/features/locations/presentation/caregiver_map_page.dart';
+import 'package:app_alerta_vital/features/locations/presentation/patient_location_page.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../services/session_provider.dart';
@@ -113,6 +115,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                   );
                 }
 
+                if (role == "PATIENT") {
+                  items.add(
+                    _NavItem(
+                      label: "Mi Ubicación",
+                      icon: Icons.location_on,
+                      location: "/patient-location",
+                    ),
+                  );
+                }
+
                 if (role == "CAREGIVER") {
                   items.add(
                     _NavItem(
@@ -132,6 +144,17 @@ final routerProvider = Provider<GoRouter>((ref) {
                     ),
                   );
                 }
+
+                if (role == "CAREGIVER") {
+                  items.add(
+                    _NavItem(
+                      label: "Ver Ubicaciones",
+                      icon: Icons.map,
+                      location: "/caregiver-map",
+                    ),
+                  );
+                }
+
                 items.add(
                   _NavItem(
                     label: "Perfil",
@@ -165,7 +188,6 @@ final routerProvider = Provider<GoRouter>((ref) {
                     final item = items[index];
 
                     if (item.location == "/logout") {
-
                       final s = ref.read(sessionServiceProvider);
                       await s.logout();
 
@@ -224,6 +246,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/profile',
             name: 'profile',
             builder: (_, __) => const PlaceholderWidget("Perfil"),
+          ),
+          GoRoute(
+            path: '/patient-location',
+            name: 'Patient Location',
+            builder: (_, __) => const PatientLocationPage(),
+          ),
+          GoRoute(
+            path: '/caregiver-map',
+            name: 'Caregiver Map',
+            builder: (_, __) => const CaregiverMapPage(),
           ),
         ],
       ),
