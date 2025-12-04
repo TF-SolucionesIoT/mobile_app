@@ -26,7 +26,12 @@ class AuthApi {
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
-    } else {
+    } else if (response.statusCode == 403) {
+      throw Exception("Invalid credentials");
+    } else if (response.statusCode == 404) {
+      throw Exception("User not found");
+    }
+    else {
       throw Exception("Error ${response.statusCode}: ${response.body}");
     }
   }

@@ -8,10 +8,10 @@ class AuthTokens {
   AuthTokens({required this.accessToken, required this.refreshToken, required this.userId, required this.typeOfUser, this.username});
 
   factory AuthTokens.fromJson(Map<String, dynamic> json) => AuthTokens(
-        accessToken: json['accessToken'],
-        refreshToken: json['refreshToken'],
-        userId: json['userId'],
-        typeOfUser: json['typeOfUser'],
-        username: json['username'],
+        accessToken: json['accessToken'] ?? '',
+        refreshToken: json['refreshToken'] ?? '',
+        userId: json['userId'] ?? 0,
+        typeOfUser: json['userType'] ?? json['typeOfUser'] ?? '',
+        username: json['username'] ?? '',
       );
 }

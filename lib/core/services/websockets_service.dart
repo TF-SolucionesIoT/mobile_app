@@ -1,7 +1,9 @@
 import 'dart:convert';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
 
 class WebSocketService {
+  String baseWssUrl = dotenv.env['WSS_URL'] ?? "ws://10.0.2.2:8081/ws";
   WebSocketChannel? _channel;
 
   void connect(
@@ -11,10 +13,10 @@ class WebSocketService {
     void Function()? onDone,
   }) {
     print("🔌 Conectando al WS...");
-    print("URL → ws://10.0.2.2:8081/ws/monitoring?token=$token");
+    print("URL → $baseWssUrl/monitoring?token=$token");
 
     _channel = WebSocketChannel.connect(
-      Uri.parse("ws://10.0.2.2:8081/ws/monitoring?token=$token"),
+      Uri.parse("$baseWssUrl/monitoring?token=$token"),
     );
 
     print("📡 Esperando mensajes...");
