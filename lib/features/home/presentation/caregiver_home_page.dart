@@ -73,7 +73,7 @@ class _PatientCard extends StatelessWidget {
   const _PatientCard({required this.patient});
 
   bool get isRisk =>
-      (patient.bpm < 50 || patient.bpm > 120 || patient.spo2 < 92);
+      (patient.bpm < 50 || patient.bpm > 120 || patient.spo2 < 92 || patient.bpSystolic > 130 || patient.bpDiastolic > 90);
 
   @override
   Widget build(BuildContext context) {
@@ -150,6 +150,18 @@ class _PatientCard extends StatelessWidget {
             label: "Oxigenación",
             value: "${patient.spo2}%",
             color: patient.spo2 < 92 ? Colors.red : Colors.green,
+          ),
+
+          const SizedBox(height: 10),
+
+          /// Métrica de presión arterial
+          _metricRow(
+            icon: Icons.monitor_heart,
+            label: "Presión arterial",
+            value: "${patient.bpSystolic}/${patient.bpDiastolic} mmHg",
+            color: (patient.bpSystolic > 130 || patient.bpDiastolic > 90)
+                ? const Color.fromARGB(255, 237, 151, 53)
+                : const Color.fromARGB(255, 61, 137, 164),
           ),
 
           const SizedBox(height: 16),

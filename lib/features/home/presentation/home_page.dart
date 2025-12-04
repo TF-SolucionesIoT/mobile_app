@@ -13,12 +13,12 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   String? _currentUserId;
   bool _isInitialized = false;
-  late final HomeController _controller; // 👈 Guardar referencia aquí
+  late final HomeController _controller; 
 
   @override
   void initState() {
     super.initState();
-    _controller = ref.read(homeControllerProvider.notifier); // 👈 Guardar al inicio
+    _controller = ref.read(homeControllerProvider.notifier); 
     _initializeMonitoring();
   }
 
@@ -37,7 +37,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         // Resetear el estado
         _controller.initMonitoring(type, userIdStr);
         
-        if (mounted) { // 👈 Verificar que el widget sigue montado
+        if (mounted) {
           setState(() {
             _currentUserId = userIdStr;
             _isInitialized = true;
@@ -49,7 +49,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   void dispose() {
-    _controller.disposeSocket(); // 👈 Usar la referencia guardada
+    _controller.disposeSocket(); 
     super.dispose();
   }
 
@@ -65,7 +65,8 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     Color bpmColor = (p.bpm < 50 || p.bpm > 120) ? Colors.red : Colors.green;
     Color spo2Color = (p.spo2 < 92) ? Colors.red : Colors.green;
-    bool riesgo = (p.bpm < 50 || p.bpm > 120 || p.spo2 < 92);
+    Color bpDiastolicColor = (p.bpDiastolic > 90) ? const Color.fromARGB(255, 237, 151, 53) : const Color.fromARGB(255, 61, 137, 164);
+    bool riesgo = (p.bpm < 50 || p.bpm > 120 || p.spo2 < 92 || p.bpSystolic > 130 || p.bpDiastolic > 90);
 
     return Scaffold(
       appBar: AppBar(
@@ -123,6 +124,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                                 color: bpmColor,
                               ),
                             ),
+                            
                           ],
                         ),
                       ],
@@ -155,6 +157,33 @@ class _HomePageState extends ConsumerState<HomePage> {
                           ],
                         ),
                       ],
+                    ),
+                    const SizedBox(height: 25),
+                    Row(
+                      children: [
+                        const Icon(Icons.monitor_heart, size: 32),
+                        const SizedBox(width: 10),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Presión Arterial",
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                            Text(
+                              "${p.bpSystolic}/${p.bpDiastolic} mmHg",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.bold,
+                                color: bpDiastolicColor,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ]
                     ),
                   ],
                 ),
