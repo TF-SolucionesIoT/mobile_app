@@ -1,4 +1,5 @@
 import 'package:app_alerta_vital/core/services/type_of_user_provider.dart';
+import 'package:app_alerta_vital/features/alerts/presentation/reading_alert_page.dart';
 import 'package:app_alerta_vital/features/auth/presentation/register/register_page.dart';
 import 'package:app_alerta_vital/features/home/presentation/caregiver_home_page.dart';
 import 'package:app_alerta_vital/features/home/presentation/home_controller.dart';
@@ -99,7 +100,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   items.add(
                     _NavItem(
                       label: "Generar Código",
-                      icon: Icons.qr_code,
+                      icon: Icons.group_add,
                       location: "/invite",
                     ),
                   );
@@ -121,6 +122,16 @@ final routerProvider = Provider<GoRouter>((ref) {
                       label: "Mi Ubicación",
                       icon: Icons.location_on,
                       location: "/patient-location",
+                    ),
+                  );
+                }
+
+                if (role == "PATIENT") {
+                  items.add(
+                    _NavItem(
+                      label: "Alertas",
+                      icon: Icons.crisis_alert,
+                      location: "/patient-alerts",
                     ),
                   );
                 }
@@ -155,13 +166,7 @@ final routerProvider = Provider<GoRouter>((ref) {
                   );
                 }
 
-                items.add(
-                  _NavItem(
-                    label: "Perfil",
-                    icon: Icons.person,
-                    location: "/profile",
-                  ),
-                );
+                
                 // ---- LOGOUT SIEMPRE AL FINAL ----
                 items.add(
                   _NavItem(
@@ -256,6 +261,10 @@ final routerProvider = Provider<GoRouter>((ref) {
             path: '/caregiver-map',
             name: 'Caregiver Map',
             builder: (_, __) => const CaregiverMapPage(),
+          ),
+          GoRoute(path: '/patient-alerts', 
+            name: 'Patient Alerts',
+            builder: (_, __) => const ReadingAlertsPage(),
           ),
         ],
       ),
